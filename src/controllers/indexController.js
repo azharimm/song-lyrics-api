@@ -25,7 +25,12 @@ exports.index = (req, res) => {
 
 exports.hotLyrics = async (req, res) => {
     const baseUrl = req.protocol + '://' + req.get('host');
-    const htmlResult = await request.get(`${process.env.BASE_URL}`);
+    const htmlResult = await request.get({
+        uri: `${process.env.BASE_URL}`,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36'
+        },
+    });
     const $ = await cheerio.load(htmlResult);
     const hotsongLists = [];
     const hotsongs = $(".hotsongs")
