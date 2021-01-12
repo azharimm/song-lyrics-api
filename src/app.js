@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const cors = require("cors");
+const indexController = require('./controllers/indexController');
 
 require("dotenv").config();
 
@@ -14,11 +15,10 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-    res.json({
-        data: 'Hi there!'
-    });
-});
+app.get("/", indexController.index);
+app.get("/hot-lyrics", indexController.hotLyrics);
+app.get("/detail", indexController.detailLyrics);
+app.get("/search", indexController.searchLyrics);
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
