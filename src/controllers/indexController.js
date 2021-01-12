@@ -52,22 +52,26 @@ exports.detailLyrics = async (req, res) => {
     if(!id) {
         return errorJson(res, "Mohon isi song id");
     }
-    songId = id.replace(/-/g, "/")+'.html';
-    const htmlResult = await request.get(
-        `${process.env.BASE_URL}/${songId}`
-    );
-    const $ = await cheerio.load(htmlResult);
-    const title = $(".lyricsh").children("h2").text();
-    const songTitle = $(".ringtone").next().text();
-    let songLyrics = $(".ringtone").next().next().next().next().text();
-    if(!songLyrics) {
-        songLyrics = $(".ringtone").next().next().next().next().next().next().text();
+    try {
+        songId = id.replace(/-/g, "/")+'.html';
+        const htmlResult = await request.get(
+            `${process.env.BASE_URL}/${songId}`
+        );
+        const $ = await cheerio.load(htmlResult);
+        const title = $(".lyricsh").children("h2").text();
+        const songTitle = $(".ringtone").next().text();
+        let songLyrics = $(".ringtone").next().next().next().next().text();
+        if(!songLyrics) {
+            songLyrics = $(".ringtone").next().next().next().next().next().next().text();
+        }
+        return json(res, {
+            title,
+            songTitle,
+            songLyrics
+        });
+    } catch (error) {
+        return errorJson(res, "Mohon isi id dengan valid id");        
     }
-    return json(res, {
-        title,
-        songTitle,
-        songLyrics
-    });
 }
 
 exports.searchLyrics = async (req, res) => {
