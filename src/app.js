@@ -16,8 +16,8 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", indexController.index);
-app.get("/hot-lyrics", indexController.hotLyrics);
-app.get("/detail", indexController.detailLyrics);
+app.get("/hot", indexController.hotLyrics);
+app.get("/lyrics/:id?", indexController.detailLyrics);
 app.get("/search", indexController.searchLyrics);
 
 app.use(middlewares.notFound);
