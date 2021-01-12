@@ -1,9 +1,10 @@
 const request = require("request-promise");
 const cheerio = require("cheerio");
-const { json } = require('../utils/response');
+const { json, errorJson } = require('../utils/response');
 
 exports.index = (req, res) => {
     const fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    
     return json(res, {
         maintainer: 'Azhari Muhammad M <azhari.marzan@gmail.com>',
         source: '',
@@ -11,6 +12,7 @@ exports.index = (req, res) => {
 }
 
 exports.hotLyrics = async (req, res) => {
+    const baseUrl = req.protocol + '://' + req.get('host');
     const htmlResult = await request.get(`${process.env.BASE_URL}`);
     const $ = await cheerio.load(htmlResult);
     const hotsongLists = [];
@@ -24,19 +26,31 @@ exports.hotLyrics = async (req, res) => {
                 .split(".html")[0]
                 .replace(/\//g, "-");
             let title = $(el).text();
-            hotsongLists.push({ id, title });
+            hotsongLists.push({
+                id,
+                title,
+                lyrics: baseUrl+'/lyrics/'+id
+            });
         });
     return json(res, hotsongLists);
 }
 
 exports.detailLyrics = async (req, res) => {
+    let id = req.params.id;
+    if(!id) {
+        return errorJson(res, "Mohon isi song id");
+    }
+    songId = id.replace(/-/g, "/")+'.html';
     const htmlResult = await request.get(
-        `${process.env.BASE_URL}/lyrics/chrisye/kalacintamenggoda.html`
+        `${process.env.BASE_URL}/${songId}`
     );
     const $ = await cheerio.load(htmlResult);
     const title = $(".lyricsh").children("h2").text();
     const songTitle = $(".ringtone").next().text();
-    const songLyrics = $(".ringtone").next().next().next().next().text();
+    let songLyrics = $(".ringtone").next().next().next().next().text();
+    if(!songLyrics) {
+        songLyrics = $(".ringtone").next().next().next().next().next().next().text();
+    }
     return json(res, {
         title,
         songTitle,
@@ -45,8 +59,13 @@ exports.detailLyrics = async (req, res) => {
 }
 
 exports.searchLyrics = async (req, res) => {
+    const baseUrl = req.protocol + '://' + req.get('host');
+    const { q } = req.query;
+    if(!q) {
+        return errorJson(res, "Mohon isi query pencarian!");
+    }
     const htmlResult = await request.get(
-        `${process.env.BASE_URL_SEARCH}/search.php?q=kala+cinta+menggoda`
+        `${process.env.BASE_URL_SEARCH}/search.php?q=${q}`
     );
     const $ = await cheerio.load(htmlResult);
     const resultLists = [];
@@ -68,7 +87,8 @@ exports.searchLyrics = async (req, res) => {
                 resultLists.push({
                     id,
                     artist,
-                    title
+                    title,
+                    lyrics: baseUrl+'/lyrics/'+id
                 })
             }
         });
