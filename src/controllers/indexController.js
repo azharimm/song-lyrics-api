@@ -8,7 +8,19 @@ exports.index = (req, res) => {
     return json(res, {
         maintainer: 'Azhari Muhammad M <azhari.marzan@gmail.com>',
         source: '',
-    })
+        hot_lyrics: {
+            endpoint: '/hot',
+            example: fullUrl+'hot'
+        },
+        detail_lyrics: {
+            endpoint: '/lyrics/:id',
+            example: fullUrl+'lyrics/lyrics-chrisye-kalacintamenggoda'
+        },
+        search_lyrics: {
+            endpoint: '/lyrics/search',
+            example: fullUrl+'search?q=Kala cinta menggoda'
+        }
+    });
 }
 
 exports.hotLyrics = async (req, res) => {
