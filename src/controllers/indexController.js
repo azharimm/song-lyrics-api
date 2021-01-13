@@ -14,7 +14,7 @@ exports.index = (req, res) => {
         },
         detail_lyrics: {
             endpoint: '/lyrics/:id',
-            example: fullUrl+'lyrics/lyrics-chrisye-kalacintamenggoda'
+            example: fullUrl+'lyrics/-c-chrisye-kala+cinta+menggoda_20227653'
         },
         search_lyrics: {
             endpoint: '/lyrics/search',
@@ -55,11 +55,13 @@ exports.hotLyrics = async (req, res) => {
             .trim()
             .replace("Lyrics", "");
         if(index > 0) {
+            let id = songId.split(".html")[0]
+            .replace(/\//g, "-")
             hotsongLists.push({
-                songId: songId.split(".html")[0]
-                .replace(/\//g, "-"),
+                songId: id,
                 artist,
-                songTitle 
+                songTitle,
+                songLyrics: `${baseUrl}/lyrics/${id}`
             });
         }
     });
@@ -74,19 +76,18 @@ exports.detailLyrics = async (req, res) => {
     try {
         songId = id.replace(/-/g, "/")+'.html';
         const htmlResult = await request.get(
-            `${process.env.BASE_URL}/${songId}`
+            `${process.env.BASE_URL}${songId}`
         );
         const $ = await cheerio.load(htmlResult);
-        const title = $(".lyricsh").children("h2").text();
-        const songTitle = $(".ringtone").next().text();
-        let songLyrics = $(".ringtone").next().next().next().next().text();
-        if(!songLyrics) {
-            songLyrics = $(".ringtone").next().next().next().next().next().next().text();
-        }
+        const artist = $(".lyric-song-head").children("a").text();
+        const songTitle = $(".lyric-song-head").text().split("–")[1].replace("Lyrics", "").trim();
+        const songLyrics = $("#content").text().trim();
+        const songLyricsArr = songLyrics.split("\n");
         return json(res, {
-            title,
+            artist,
             songTitle,
-            songLyrics
+            songLyrics,
+            songLyricsArr,
         });
     } catch (error) {
         return errorJson(res, "Mohon isi id dengan valid id");        
@@ -100,33 +101,42 @@ exports.searchLyrics = async (req, res) => {
         return errorJson(res, "Mohon isi query pencarian!");
     }
     const htmlResult = await request.get(
-        `${process.env.BASE_URL_SEARCH}/search.php?q=${q}`
+        `${process.env.BASE_URL}/search.php?q=${q}`
     );
     const $ = await cheerio.load(htmlResult);
     const resultLists = [];
-    const results = $(".table-condensed")
-        .children("tbody")
-        .children("tr")
-        .each((index, el) => {
-            const artist = $(el).children("td").children("b").text();
-            const title = $(el).children("td").children("a").text();
-            if(artist) {
-                const id = $(el)
-                    .children("td")
-                    .children("a")
-                    .attr("href")
-                    .split("www.azlyrics.com/")[1]
-                    .split(".html")[0]
-                    .replace(/\//g, "-");
-
-                resultLists.push({
-                    id,
-                    artist,
-                    title,
-                    lyrics: baseUrl+'/lyrics/'+id
-                })
-            }
-        });
+    $(".lf-list__row").each((index, el) => {
+        let songId = $(el)
+            .children(".lf-list__meta")
+            .children("a")
+            .attr("href")
+            
+        let artist = $(el)
+            .children(".lf-list__title--secondary")
+            .children("a")
+            .text()
+            .replace(/\s+/g, "")
+            .replace(/([A-Z])/g, " $1")
+            .trim();
+        let songTitle = $(el)
+            .children(".lf-list__meta")
+            .children("a")
+            .text()
+            .replace(/\s+/g, "")
+            .replace(/([A-Z])/g, " $1")
+            .trim()
+            .replace("Lyrics", "");
+        if(index > 0) {
+            let id = songId.split(".html")[0]
+            .replace(/\//g, "-")
+            resultLists.push({
+                songId: id,
+                artist,
+                songTitle,
+                songLyrics: `${baseUrl}/lyrics/${id}`
+            });
+        }
+    });
 
     return json(res, resultLists);
 }
