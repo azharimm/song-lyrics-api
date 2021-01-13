@@ -26,29 +26,43 @@ exports.index = (req, res) => {
 exports.hotLyrics = async (req, res) => {
     const baseUrl = req.protocol + '://' + req.get('host');
     const htmlResult = await request.get({
-        uri: `${process.env.BASE_URL}`,
+        uri: `${process.env.BASE_URL}/top`,
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.111 Safari/537.36'
         },
     });
     const $ = await cheerio.load(htmlResult);
     const hotsongLists = [];
-    const hotsongs = $(".hotsongs")
-        .children(".list-group")
-        .children("a")
-        .each((index, el) => {
-            let id = $(el)
-                .attr("href")
-                .split("www.azlyrics.com/")[1]
-                .split(".html")[0]
-                .replace(/\//g, "-");
-            let title = $(el).text();
+    $(".lf-list__row").each((index, el) => {
+        let songId = $(el)
+            .children(".lf-list__subtitle")
+            .children("a")
+            .attr("href")
+            
+        let artist = $(el)
+            .children(".lf-list__title")
+            .children("span")
+            .text()
+            .replace(/\s+/g, "")
+            .replace(/([A-Z])/g, " $1")
+            .trim();
+        let songTitle = $(el)
+            .children(".lf-list__subtitle")
+            .children("a")
+            .text()
+            .replace(/\s+/g, "")
+            .replace(/([A-Z])/g, " $1")
+            .trim()
+            .replace("Lyrics", "");
+        if(index > 0) {
             hotsongLists.push({
-                id,
-                title,
-                lyrics: baseUrl+'/lyrics/'+id
+                songId: songId.split(".html")[0]
+                .replace(/\//g, "-"),
+                artist,
+                songTitle 
             });
-        });
+        }
+    });
     return json(res, hotsongLists);
 }
 
