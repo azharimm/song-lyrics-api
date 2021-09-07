@@ -19,6 +19,7 @@ app.get("/", indexController.index);
 app.get("/hot", indexController.hotLyrics);
 app.get("/lyrics/:id?", indexController.detailLyrics);
 app.get("/search", indexController.searchLyrics);
+app.get("/test", indexController.test);
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);

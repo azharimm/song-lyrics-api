@@ -140,3 +140,20 @@ exports.searchLyrics = async (req, res) => {
 
     return json(res, resultLists);
 }
+
+exports.test = async (req, res) => {
+    const htmlResult = await request.get({
+        uri: `${process.env.BASE_URL_V2}`,
+        headers: {
+            'User-Agent':"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30"
+        },
+    });
+    const $ = await cheerio.load(htmlResult);
+    const resultLists = [];
+    $(".list-group-item").each((index, el) => {
+        const text = $(el).text();
+        resultLists.push(text);
+    });
+
+    return json(res, resultLists);
+}
